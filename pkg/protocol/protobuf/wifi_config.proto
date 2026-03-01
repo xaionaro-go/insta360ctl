@@ -1,0 +1,130 @@
+// WiFi configuration messages for Insta360 cameras.
+// From official protobuf definitions in libOne.so (lib-one-proto package).
+//
+// Command codes:
+//   SetWifiConnectionInfo = 112 (0x70)
+//   GetWifiConnectionInfo = 113 (0x71)
+//   SetWifiMode           = 147 (0x93)
+//   GetWifiMode           = 150 (0x96)
+//   GetWifiScanList       = 148 (0x94)
+//   GetConnectedWifiList  = 149 (0x95)
+//   ResetWifi             = 125 (0x7D)
+//   DelWifiHistoryInfo    = 175 (0xAF)
+//
+// Notifications:
+//   WifiStatus            = 8232 (0x2028)
+//   WifiModeChange        = 8247 (0x2037)
+//   WifiScanListChanged   = 8249 (0x2039)
+syntax = "proto3";
+
+package insta360.messages;
+
+option go_package = "github.com/xaionaro-go/insta360ctl/pkg/protocol/protobuf";
+
+// WifiMode identifies the camera's WiFi operating mode.
+enum WifiMode {
+  WIFI_MODE_AP  = 0; // Camera acts as access point (default)
+  WIFI_MODE_STA = 1; // Camera joins existing WiFi network (station mode)
+  WIFI_MODE_P2P = 2; // WiFi Direct / peer-to-peer
+}
+
+// WifiConnectionResult indicates the outcome of a WiFi join attempt.
+enum WifiConnectionResult {
+  WIFI_SUCCESS              = 0;
+  WIFI_TIMEOUT              = 1;
+  WIFI_ERROR_CONNECT_FAILED = 2;
+}
+
+// WifiConnectionInfo describes a WiFi network and connection state.
+message WifiConnectionInfo {
+  string ssid     = 1; // Network name
+  string bssid    = 2; // Access point MAC address (optional)
+  string password  = 3; // Network password
+  string ip_addr   = 4; // IP address assigned after connection
+}
+
+// SetWifiConnectionInfo tells the camera to join a WiFi network (command 0x70).
+message SetWifiConnectionInfo {
+  WifiConnectionInfo wifi_connection_info = 1;
+}
+
+// SetWifiConnectionInfoResp is the response to SetWifiConnectionInfo.
+message SetWifiConnectionInfoResp {
+}
+
+// GetWifiConnectionInfo queries the camera's current WiFi connection (command 0x71).
+message GetWifiConnectionInfo {
+}
+
+// GetWifiConnectionInfoResp returns the camera's current WiFi connection info.
+message GetWifiConnectionInfoResp {
+  WifiConnectionInfo wifi_connection_info = 1;
+}
+
+// CameraWifiConnectionResult is a notification (code 8232) sent by the camera
+// after attempting to join a WiFi network.
+message CameraWifiConnectionResult {
+  WifiConnectionResult wifi_connection_result = 1;
+  WifiConnectionInfo   wifi_connection_info   = 2;
+}
+
+// SetWifiMode sets the camera's WiFi operating mode (command 0x93).
+message SetWifiMode {
+  uint32   place_holder = 1; // Reserved (send 0)
+  WifiMode wifi_mode    = 2;
+}
+
+// SetWifiModeResp is the response to SetWifiMode.
+message SetWifiModeResp {
+}
+
+// GetWifiMode queries the camera's current WiFi mode (command 0x96).
+message GetWifiMode {
+}
+
+// GetWifiModeResp returns the camera's current WiFi mode.
+message GetWifiModeResp {
+  WifiMode wifi_mode = 1;
+}
+
+// WifiModeResult is returned in WifiModeChange notifications.
+message WifiModeResult {
+  WifiMode wifi_mode = 1;
+  int32    err_code  = 2;
+}
+
+// GetWifiScanInfo requests a WiFi scan (command 0x94).
+message GetWifiScanInfo {
+  int32 interval = 1; // Scan interval in seconds
+  int32 count    = 2; // Number of scans
+}
+
+// GetWifiScanInfoResp is the response to GetWifiScanInfo.
+message GetWifiScanInfoResp {
+}
+
+// WifiScanInfo describes a discovered WiFi network.
+message WifiScanInfo {
+  string bssid        = 1;
+  uint32 frequency    = 2; // MHz
+  int32  signal_level = 3; // dBm
+  string flags        = 4; // Security flags (e.g. "[WPA2-PSK-CCMP]")
+  string ssid         = 5;
+}
+
+// WifiScanInfoList is sent in WifiScanListChanged notifications (code 8249).
+message WifiScanInfoList {
+  repeated WifiScanInfo wifi_info   = 1;
+  int32                 list_count  = 2;
+}
+
+// GetWifiConnectList queries saved WiFi networks (command 0x95).
+message GetWifiConnectList {
+}
+
+// GetWifiConnectListResp returns the list of saved WiFi networks.
+message GetWifiConnectListResp {
+  repeated WifiConnectionInfo connect_list            = 1;
+  uint32                      list_count              = 2;
+  WifiConnectionInfo          current_wifi_connect_info = 3;
+}

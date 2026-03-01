@@ -1,0 +1,7 @@
+/bin/
+/insta360ctl
+*.exe
+*.test
+*.prof
+.idea/
+.vscode/

@@ -1,0 +1,47 @@
+// Live streaming messages for Insta360 WiFi protocol.
+// Used over TCP port 6666 to control video preview streaming.
+syntax = "proto3";
+
+package insta360.messages;
+
+option go_package = "github.com/xaionaro-go/insta360ctl/pkg/protocol/protobuf";
+
+// VideoResolution identifies the stream resolution and frame rate.
+// Values observed from reference implementations (RigacciOrg, WhiteBox).
+enum VideoResolution {
+  RES_UNKNOWN       = 0;
+  RES_1440_720P30   = 9;   // 1440x720 @ 30fps (dual fisheye)
+  RES_480_240P30    = 18;  // 480x240 @ 30fps (low-res secondary)
+  RES_1920_1080P30  = 29;  // 1920x1080 @ 30fps
+  RES_424_240P15    = 34;  // 424x240 @ 15fps (thumbnail preview)
+}
+
+// StartLiveStream is sent to begin video preview streaming (WiFi command code 1).
+message StartLiveStream {
+  bool            enable_audio       = 1;
+  bool            enable_video       = 2;
+  // field 3 = audioType enum (AACBSType), not commonly used
+  uint32          audio_sample_rate  = 4;
+  uint32          audio_bitrate      = 5;
+  uint32          video_bitrate      = 6;  // observed value: 40
+  VideoResolution resolution         = 7;  // primary stream resolution
+  bool            enable_gyro        = 8;
+  uint32          video_bitrate1     = 9;  // secondary stream bitrate
+  VideoResolution resolution1        = 10; // secondary stream resolution
+  uint32          preview_stream_num = 11; // number of preview streams (0 or 1)
+  bool            enable_rotate      = 12;
+  bool            is_for_live        = 13; // true if streaming to external RTMP
+}
+
+// StartLiveStreamResp is an empty response confirming stream start (response code 200).
+message StartLiveStreamResp {
+}
+
+// StopLiveStream is sent to stop the preview stream (WiFi command code 2).
+message StopLiveStream {
+}
+
+// SyncLocalTimeToCamera is sent after sync handshake to synchronize time.
+message SyncLocalTimeToCamera {
+  uint64 timestamp_ms = 1; // Unix timestamp in milliseconds
+}

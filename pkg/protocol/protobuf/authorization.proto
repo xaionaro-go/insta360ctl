@@ -1,0 +1,63 @@
+// Authorization messages for Insta360 BLE protocol.
+// Reverse-engineered from libOne.so via Ghidra decompilation.
+syntax = "proto3";
+
+package insta360.messages;
+
+option go_package = "github.com/xaionaro-go/insta360ctl/pkg/protocol/protobuf";
+
+// CheckAuthorization is sent by the phone/app to the camera (MessageCode 0x27).
+message CheckAuthorization {
+  // Unique identifier for this app/device pairing (typically the BLE MAC address).
+  string authorization_id = 1;
+  // Token for Find My device integration (optional).
+  string findmy_token = 2;
+  // Who initiated the authorization check.
+  CheckAuthorization_InitiatorType initiator_type = 3;
+}
+
+// InitiatorType indicates who triggered the authorization check.
+// Values from CheckAuthorization_InitiatorType_IsValid bitmask 0x10007000f.
+enum CheckAuthorization_InitiatorType {
+  INITIATOR_TYPE_DEFAULT = 0;
+  INITIATOR_TYPE_USER = 1;
+  INITIATOR_TYPE_APP = 2;
+  INITIATOR_TYPE_SYSTEM = 3;
+  INITIATOR_TYPE_BACKGROUND = 16;
+  INITIATOR_TYPE_AUTO_RECONNECT = 32;
+}
+
+// CheckAuthorizationResp is sent by the camera in response (MessageCode 0x8B).
+message CheckAuthorizationResp {
+  CheckAuthorizationResp_AuthorizationStatus authorization_status = 1;
+  int32 findmy_pair_status = 2;
+}
+
+// AuthorizationStatus indicates the camera's authorization state.
+enum CheckAuthorizationResp_AuthorizationStatus {
+  AUTHORIZATION_STATUS_UNKNOWN = 0;
+  AUTHORIZATION_STATUS_AUTHORIZED = 1;
+  AUTHORIZATION_STATUS_NOT_AUTHORIZED = 2;
+  AUTHORIZATION_STATUS_PENDING = 3;
+  AUTHORIZATION_STATUS_DENIED = 4;
+  AUTHORIZATION_STATUS_EXPIRED = 5;
+}
+
+// RequestAuthorization is sent when camera reports not authorized (MessageCode 0x56).
+message RequestAuthorization {
+  AuthorizationOperationType operation_type = 1;
+}
+
+// AuthorizationOperationType specifies the type of authorization request.
+// Values from AuthorizationOperationType_IsValid: 0, 1, 2, 3.
+enum AuthorizationOperationType {
+  AUTHORIZATION_OPERATION_DEFAULT = 0;
+  AUTHORIZATION_OPERATION_PAIR = 1;
+  AUTHORIZATION_OPERATION_REPAIR = 2;
+  AUTHORIZATION_OPERATION_UNPAIR = 3;
+}
+
+// NotificationAuthorizationResult is sent by camera after user confirms (MessageCode 0x8A).
+message NotificationAuthorizationResult {
+  bool authorized = 1;
+}
